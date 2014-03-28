@@ -5,7 +5,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
-
 import java.util.List;
 
 public class CYKParser {
@@ -74,25 +73,50 @@ public class CYKParser {
 
 	}
 
-	public String parse(String in) {
+	public boolean parse(String in) {
 		String[] splited = in.split(" ");
+		int inputSize = splited.length;
 		this.memTable = new String[splited.length][splited.length];
-		for (int i = 0; i < splited.length; i++) {
-			// for (int k = splited.length - i - 1; k >= 0; k--) {
-			for (int k = 0; k < i + 1; k++) {
-				this.memTable[i][k] = "----";
+		this.doFirstRow(splited);
+		for (int row = 1; row < inputSize; row++) {
+			for (int col = 0; col < inputSize - row; col++) {
+				for (int k = 0; k < row; k++) {
+					if (this.memTable[k][col] != null
+							&& this.memTable[row - k - 1][col + k + 1] != null) {
+						String newVariable = this.memTable[k][col] + ""
+								+ this.memTable[row - k - 1][col + k + 1];
+						insetIntoTable(newVariable, row, col);
+					}
+				}
 			}
 		}
-		return "";
+
+		return (this.memTable[inputSize-1][0] != null && this.memTable[4][0].contains("S"));
+	}
+
+	private boolean doFirstRow(String[] splited) {
+		for (int col = 0; col < splited.length; col++) {
+			insetIntoTable(splited[col] + " ", 0, col);
+		}
+		return false;
+	}
+
+	private boolean insetIntoTable(String token, int row, int col) {
+		if (this.grammerMap.containsKey(token)) {
+			Rule rule = this.grammerMap.get(token);
+			this.memTable[row][col] = rule.getVariable();
+			return true;
+		}
+		return false;
 	}
 
 	// taken from stackoverflow
-	static void printMatrix(String[][] grid) {
-		for (int r = 0; r < grid.length; r++) {
-			for (int c = 0; c < grid[r].length; c++)
-				System.out.print(" | " + grid[r][c]);
-
-			System.out.println(" |");
+	static void printArray(String matrix[][]) {
+		for (int row = 0; row < matrix.length; row++) {
+			for (int column = 0; column < matrix[row].length; column++) {
+				System.out.print("  |  " + matrix[row][column]);
+			}
+			System.out.println(" | ");
 		}
 	}
 
@@ -101,10 +125,10 @@ public class CYKParser {
 	 */
 	public static void main(String[] args) {
 		CYKParser parser = new CYKParser("english.txt");
-		System.out.println(parser.inGrammer("amy ").getVariable());
-		parser.parse("f o o");
-
-		printMatrix(parser.memTable);
+		// System.out.println(parser.inGrammer("ate ").getVariable());
+		boolean x = parser.parse("amy ate fish for dinner for dinner ");
+		System.out.println(x);
+		printArray(parser.memTable);
 	}
 
 }
