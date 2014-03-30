@@ -2,6 +2,8 @@ package cykparser;
 
 import static org.junit.Assert.*;
 
+import java.util.HashSet;
+
 
 
 import org.junit.Before;
@@ -31,8 +33,23 @@ public class CYKtest {
 	}
 
 	@Test
-	public void makeGrammer() {
-		parser.makeGrammer();
-//		assertTrue(parser.grammerMap.get('W').variables.equals("OL"));
+	public void testMakeCartensianProduct() {
+		HashSet<String> testSet= new HashSet<String>();
+		testSet.add("AA");
+		testSet.add("AB");
+		testSet.add("BA");
+		testSet.add("BB");
+		HashSet<String> thisSet = parser.makeCartensianProduct("AB,AB");
+		assertEquals(testSet, thisSet);
+		HashSet<String> testSet2= new HashSet<String>();
+		testSet2.add("AB");
+		HashSet<String> thisSet2 = parser.makeCartensianProduct("AA,BB");
+		assertEquals(testSet2, thisSet2);
+		HashSet<String> testSet3= new HashSet<String>();
+		testSet3.add("A");
+		HashSet<String> thisSet3 = parser.makeCartensianProduct("A");
+		assertEquals(testSet3, thisSet3);
+		
+
 	}
 }

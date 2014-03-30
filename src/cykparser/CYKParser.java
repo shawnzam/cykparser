@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 public class CYKParser {
@@ -13,6 +15,7 @@ public class CYKParser {
 	protected String memTable[][];
 	protected String start;
 	protected HashMap<String, Rule> grammerMap = new HashMap<String, Rule>();
+	protected ArrayList<Rule> ruleList = new ArrayList<Rule>();
 
 	public CYKParser(String fileName) {
 		try {
@@ -60,17 +63,7 @@ public class CYKParser {
 			r = new RHS(null, s.substring(5));
 		}
 		grammerMap.put(r.getKey(), new Rule(l, r));
-	}
-
-	private Rule inGrammer(String terminal) {
-		for (String key : grammerMap.keySet()) {
-			if (terminal.equals(key)) {
-				return grammerMap.get(key);
-			}
-
-		}
-		return null;
-
+		ruleList.add(new Rule(l, r));
 	}
 
 	public boolean parse(String in) {
@@ -83,31 +76,97 @@ public class CYKParser {
 				for (int k = 0; k < row; k++) {
 					if (this.memTable[k][col] != null
 							&& this.memTable[row - k - 1][col + k + 1] != null) {
-						String newVariable = this.memTable[k][col] + ""
+						String newVariable = this.memTable[k][col] + ","
 								+ this.memTable[row - k - 1][col + k + 1];
-						insetIntoTable(newVariable, row, col);
+						insetIntoTable(newVariable, row, col, false);
+
 					}
 				}
 			}
 		}
-
-		return (this.memTable[inputSize-1][0] != null && this.memTable[4][0].contains("S"));
+		System.out.println(ruleList.get(0).getVariable());
+		return (this.memTable[inputSize - 1][0] != null && this.memTable[inputSize - 1][0]
+				.contains(ruleList.get(0).getVariable()));
 	}
 
 	private boolean doFirstRow(String[] splited) {
 		for (int col = 0; col < splited.length; col++) {
-			insetIntoTable(splited[col] + " ", 0, col);
+			insetIntoTable(splited[col] + " ", 0, col, true);
 		}
 		return false;
 	}
 
-	private boolean insetIntoTable(String token, int row, int col) {
-		if (this.grammerMap.containsKey(token)) {
-			Rule rule = this.grammerMap.get(token);
-			this.memTable[row][col] = rule.getVariable();
-			return true;
+	HashSet<String> makeCartensianProduct(String token) {
+		if (token != null) {
+			HashSet<String> returnSet = new HashSet<String>();
+			if (token.contains(",")) {
+				returnSet = new HashSet<String>();
+				String[] tokens = token.split(",");
+				char[] one = tokens[0].toCharArray();
+				char[] two = tokens[1].toCharArray();
+				for (int i = 0; i < one.length; i++) {
+					for (int j = 0; j < two.length; j++) {
+						returnSet.add("" + one[i] + two[j] + "");
+					}
+				}
+				return returnSet;
+			}
+			returnSet = new HashSet<String>();
+			returnSet.add(token);
+			return returnSet;
+
 		}
-		return false;
+
+		return null;
+	}
+
+	private void insertOrUpdate(int row, int col, Rule r) {
+		if (this.memTable[row][col] != null) {
+			HashSet<Character> dupeRemover = new HashSet<Character>();
+			char[] dupestring = (this.memTable[row][col] + r.getVariable())
+					.toCharArray();
+			for (char c : dupestring) {
+				dupeRemover.add(c);
+			}
+			String dupefree = "";
+			for (char c : dupeRemover) {
+				dupefree += c;
+			}
+
+			this.memTable[row][col] = dupefree;
+		} else {
+			this.memTable[row][col] = r.getVariable();
+		}
+	}
+
+	private boolean insetIntoTable(String rhs, int row, int col,
+			boolean firstrow) {
+		if (firstrow) {
+			for (Rule r : ruleList) {
+				if (r.isTerminal()) {
+					if (r.rhs.terminal.equals(rhs)) {
+						insertOrUpdate(row, col, r);
+					}
+				}
+			}
+		} else {
+
+			HashSet<String> variables = makeCartensianProduct(rhs);
+
+			for (Rule r : ruleList) {
+				if (r.isVariable()) {
+					for (String c : variables) {
+						if (r.rhs.variables.equals(c)) {
+							insertOrUpdate(row, col, r);
+						}
+					}
+				}
+			}
+
+		}
+
+		return firstrow;
+
 	}
 
 	// taken from stackoverflow
@@ -124,9 +183,9 @@ public class CYKParser {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		CYKParser parser = new CYKParser("english.txt");
+		CYKParser parser = new CYKParser("ab.txt");
 		// System.out.println(parser.inGrammer("ate ").getVariable());
-		boolean x = parser.parse("amy ate fish for dinner for dinner ");
+		boolean x = parser.parse("b a a b a ");
 		System.out.println(x);
 		printArray(parser.memTable);
 	}
