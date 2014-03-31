@@ -15,12 +15,12 @@ public class CYKtest {
 	@Before
 	public void setUp() throws Exception {
 		parser = new CYKParser("english.txt");
+		parser.tryToOpenFile();
 	}
 
 	@Test
 	public void testForInput() {
 		assertFalse(parser.lines.isEmpty());
-
 	}
 
 	@Test
@@ -29,6 +29,7 @@ public class CYKtest {
 		assertTrue("A -> DD".matches("^[A-Z] -> ([A-Z]{2}|[a-z]+ )"));
 		assertFalse("A -> foo".matches("^[A-Z] -> ([A-Z]{2}|[a-z]+ )"));
 		assertFalse("A -> DDD".matches("^[A-Z] -> ([A-Z]{2}|[a-z]+ )"));
+		assertFalse("C ->AB".matches("^[A-Z] -> ([A-Z]{2}|[a-z]+ )"));
 		assertTrue(parser.checkInputFile());
 	}
 

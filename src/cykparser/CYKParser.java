@@ -3,6 +3,7 @@ package cykparser;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,12 +17,21 @@ public class CYKParser {
 	protected String start;
 	protected HashMap<String, Rule> grammerMap = new HashMap<String, Rule>();
 	protected ArrayList<Rule> ruleList = new ArrayList<Rule>();
+	String filename;
 
 	public CYKParser(String fileName) {
+		this.filename = fileName.trim();
+	}
+
+	boolean tryToOpenFile() {
 		try {
-			this.lines = Files.readAllLines(Paths.get(fileName),
+			this.lines = Files.readAllLines(Paths.get(this.filename),
 					Charset.defaultCharset());
+		} catch (NoSuchFileException e) {
+			System.out.println("No Such file");
+			return false;
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -29,17 +39,22 @@ public class CYKParser {
 			System.out
 					.println("The formating of this line is incorrect. "
 							+ "\nPlease make sure that there is a space before and after -> "
-							+ "\nand a space following any variable defined. ");
+							+ "\nand a space following any terminal defined. ");
+			return false;
 		}
 		makeGrammer();
 
 		System.out.println(grammerMap);
+		return true;
+
 	}
 
 	boolean checkInputFile() {
+		int lineNumber = 0;
 		for (String line : this.lines) {
+			lineNumber++;
 			if (!line.matches("^[A-Z] -> ([A-Z]{2}|[a-z]+ )")) {
-				System.out.println(line);
+				System.out.print("[" + lineNumber + ": " + line + "] ");
 				return false;
 			}
 		}
@@ -49,7 +64,11 @@ public class CYKParser {
 	void makeGrammer() {
 		start = this.lines.get(0);
 		for (String line : this.lines) {
-			splitLineToMap(line);
+			if (!line.trim().isEmpty()){
+			
+				splitLineToMap(line);
+			}
+			
 		}
 	}
 
@@ -84,7 +103,7 @@ public class CYKParser {
 				}
 			}
 		}
-		System.out.println(ruleList.get(0).getVariable());
+//		System.out.println(ruleList.get(0).getVariable());
 		return (this.memTable[inputSize - 1][0] != null && this.memTable[inputSize - 1][0]
 				.contains(ruleList.get(0).getVariable()));
 	}
@@ -183,11 +202,7 @@ public class CYKParser {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		CYKParser parser = new CYKParser("ab.txt");
-		// System.out.println(parser.inGrammer("ate ").getVariable());
-		boolean x = parser.parse("b a a b a ");
-		System.out.println(x);
-		printArray(parser.memTable);
+		new Repl();
 	}
 
 }
