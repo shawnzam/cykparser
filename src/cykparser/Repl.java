@@ -3,7 +3,6 @@ package cykparser;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.NoSuchFileException;
 
 public class Repl {
 	boolean validFile;
@@ -12,21 +11,9 @@ public class Repl {
 	public Repl() {
 		this.validFile = false;
 		this.run();
-		// System.out.print("$");
-		// // open up standard input
-		// BufferedReader br = new BufferedReader(new
-		// InputStreamReader(System.in));
-		// String input = null;
-		// try {
-		// input = br.readLine();
-		// } catch (IOException ioe) {
-		// System.out.println("IO error trying to read");
-		// }
-		// System.out.println(input);
-
 	}
-	
-	public void run(){
+
+	public void run() {
 		String input = null;
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		while (!validFile) {
@@ -36,8 +23,8 @@ public class Repl {
 			System.out.print("Enter a sentance to test(or '.exit' to exit): ");
 			try {
 				input = br.readLine();
-				
-				if (input.equals(".exit")){
+
+				if (input.equals(".exit")) {
 					System.out.println("Exiting...");
 					break;
 				}
@@ -55,16 +42,15 @@ public class Repl {
 			filename = br.readLine();
 			System.out.println("Trying to open " + filename);
 			this.parser = new CYKParser(filename);
-			if (this.parser.tryToOpenFile()){
+			if (this.parser.tryToOpenFile()) {
 				this.validFile = true;
 			}
 			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
-			
+
 		}
-		
 
 	}
 }
